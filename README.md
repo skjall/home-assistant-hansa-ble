@@ -129,9 +129,13 @@ writes, and reads the new state back over the same connection.
 
 ### HACS (recommended)
 
-1. HACS → three-dot menu → *Custom repositories*
-2. Add this repository's URL, category *Integration*
-3. Install *Hansa Faucet (BLE)*, then restart Home Assistant
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=skjall&repository=home-assistant-hansa-ble&category=integration)
+
+The button opens this repository in HACS on your own instance. Install
+*Hansa Faucet (BLE)* there, then restart Home Assistant.
+
+Should the button not work, add the repository by hand: HACS → three-dot menu
+→ *Custom repositories* → this repository's URL, category *Integration*.
 
 ### Manually
 
@@ -141,8 +145,10 @@ so that it ends up at `config/custom_components/hansa_ble`, then restart.
 ## Setup
 
 The faucet is discovered on its own once it advertises — *Settings → Devices &
-Services* will offer it. Otherwise add it through *Add integration → Hansa
-Faucet (BLE)*.
+Services* will offer it. Otherwise start the setup here:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=hansa_ble)
+
 
 You will be asked for the PIN, and it is verified against the faucet before
 the entry is created. If that fails with *could not connect*, simply try again:
@@ -221,14 +227,8 @@ trademarks belong to their owners.
 This integration meets all 44 rules of the Home Assistant
 [Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/)
 up to and including Platinum. The per-rule status lives in
-[`custom_components/hansa_ble/quality_scale.yaml`](custom_components/hansa_ble/quality_scale.yaml),
-and `scripts/check_quality_scale.py` re-proves 36 of those rules mechanically on
-every commit, so a claim cannot silently rot.
-
-The manifest declares `"quality_scale": "custom"`, because Home Assistant reports
-that tier for every integration outside core regardless of what the manifest says
-(`Integration.quality_scale` in `loader.py`). A core tier there would be a claim the
-runtime never repeats.
+[`quality_scale.yaml`](custom_components/hansa_ble/quality_scale.yaml), and 36 of
+those rules are re-proven mechanically on every commit.
 
 ## License
 
