@@ -1,3 +1,6 @@
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
 # The quality tier is enforced here, not asserted: whatever quality_scale.yaml
 # lists as done has to survive its check, and the coverage floors that tier
 # requires have to hold.
@@ -23,6 +26,12 @@ repos:
 
   - repo: local
     hooks:
+      - id: commit-message
+        name: Commit message - Conventional Commits, in English
+        entry: python3 scripts/check_commit_message.py
+        language: system
+        stages: [commit-msg]
+
       - id: quality-scale
         name: Quality scale - the code holds what quality_scale.yaml claims
         entry: python3 scripts/check_quality_scale.py

@@ -216,6 +216,20 @@ app binary it was derived from is not redistributed here.
 Not affiliated with, endorsed by, or supported by Hansa or Oras. All
 trademarks belong to their owners.
 
+## Quality scale
+
+This integration meets all 44 rules of the Home Assistant
+[Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/)
+up to and including Platinum. The per-rule status lives in
+[`custom_components/hansa_ble/quality_scale.yaml`](custom_components/hansa_ble/quality_scale.yaml),
+and `scripts/check_quality_scale.py` re-proves 36 of those rules mechanically on
+every commit, so a claim cannot silently rot.
+
+The manifest declares `"quality_scale": "custom"`, because Home Assistant reports
+that tier for every integration outside core regardless of what the manifest says
+(`Integration.quality_scale` in `loader.py`). A core tier there would be a claim the
+runtime never repeats.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
