@@ -17,32 +17,6 @@
   },
   "packageRules": [
     {
-      "description": "These versions are copied from the bluetooth component's manifest.json in the Home Assistant release this integration targets. Bumping one on its own means testing a combination that no Home Assistant install actually has, so they are grouped, never auto-merged, and reviewed together with the targeted version.",
-      "matchFileNames": [
-        "requirements-test.txt",
-        "Dockerfile.test"
-      ],
-      "matchPackageNames": [
-        "bleak",
-        "bleak-retry-connector",
-        "bluetooth-adapters",
-        "bluetooth-auto-recovery",
-        "bluetooth-data-tools",
-        "dbus-fast",
-        "habluetooth",
-        "aiousbwatcher",
-        "serialx"
-      ],
-      "groupName": "Home Assistant bluetooth stack (pinned to the targeted release)",
-      "automerge": false,
-      "addLabels": [
-        "needs-ha-version-check"
-      ],
-      "reviewers": [
-        "Skjall"
-      ]
-    },
-    {
       "description": "The runtime dependency of the protocol package. It ends up in every install, so a human looks at it.",
       "matchFileNames": [
         "lib/hansa_ble_protocol/pyproject.toml"

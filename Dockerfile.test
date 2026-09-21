@@ -4,18 +4,13 @@
 # lru-dict is built from source and needs the libc headers for that.
 FROM python:3.14
 
-# pytest-homeassistant-custom-component brings Home Assistant itself, but not
-# the requirements of the bluetooth component. The versions come from its
-# manifest.json in the installed Home Assistant release.
-RUN pip install --no-cache-dir \
-      pytest-homeassistant-custom-component \
-      "bleak==3.0.2" \
-      "bleak-retry-connector==4.7.0" \
-      "bluetooth-adapters==2.4.0" \
-      "bluetooth-auto-recovery==1.6.4" \
-      "bluetooth-data-tools==1.29.24" \
-      "dbus-fast==5.0.22" \
-      "habluetooth==6.26.11" \
-      "aiousbwatcher==1.1.2" \
-      "serialx==1.10.0"
+COPY requirements-test.txt scripts/ha_test_requirements.py /tmp/setup/
+
+# The bluetooth requirements come from the installed Home Assistant release
+# itself; see the script for why they are not pinned by hand.
+RUN pip install --no-cache-dir -r /tmp/setup/requirements-test.txt \
+ && python /tmp/setup/ha_test_requirements.py > /tmp/setup/bluetooth.txt \
+ && pip install --no-cache-dir -r /tmp/setup/bluetooth.txt \
+ && rm -rf /tmp/setup
+
 WORKDIR /app
