@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.2.0...v0.3.0) (2026-09-21)
+
+
+### Features
+
+* take the wire protocol from PyPI instead of carrying a copy ([c9f43a0](https://github.com/skjall/home-assistant-hansa-ble/commit/c9f43a029d8c021038b373189a7c37b7c8244d12))
+
+
+### Bug Fixes
+
+* publish from the release run, not from a tag push ([e2cc751](https://github.com/skjall/home-assistant-hansa-ble/commit/e2cc751b15c3228b71f9d03f03cc3d81690ccb46))
+
 ## [0.2.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.1.0...v0.2.0) (2026-09-21)
 
 
