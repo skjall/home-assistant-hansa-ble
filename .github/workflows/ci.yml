@@ -104,7 +104,7 @@ jobs:
           python -m pip install --upgrade pip build pytest
           python -m build
           pip install dist/*.whl
-          pytest tests/
+          pytest -c pyproject.toml tests/
 
   hassfest:
     runs-on: ubuntu-latest

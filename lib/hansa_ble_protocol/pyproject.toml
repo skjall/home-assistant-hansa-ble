@@ -28,3 +28,9 @@ Issues = "https://github.com/skjall/home-assistant-hansa-ble/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hansa_ble_protocol"]
+
+[tool.pytest.ini_options]
+# Without this the repository's own pytest.ini applies here too and asks for
+# coverage of the integration, which this package knows nothing about.
+testpaths = ["tests"]
+addopts = ""

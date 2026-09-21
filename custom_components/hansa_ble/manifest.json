@@ -1,7 +1,12 @@
 {
   "domain": "hansa_ble",
   "name": "Hansa Faucet (BLE)",
-  "version": "0.1.0",
+  "bluetooth": [
+    {
+      "manufacturer_id": 305,
+      "connectable": true
+    }
+  ],
   "codeowners": [
     "@skjall"
   ],
@@ -10,9 +15,9 @@
     "bluetooth_adapters"
   ],
   "documentation": "https://github.com/skjall/home-assistant-hansa-ble",
-  "issue_tracker": "https://github.com/skjall/home-assistant-hansa-ble/issues",
   "integration_type": "device",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/skjall/home-assistant-hansa-ble/issues",
   "loggers": [
     "bleak",
     "bleak_retry_connector"
@@ -20,10 +25,5 @@
   "requirements": [
     "bleak-retry-connector>=3.5.0"
   ],
-  "bluetooth": [
-    {
-      "manufacturer_id": 305,
-      "connectable": true
-    }
-  ]
+  "version": "0.1.0"
 }
