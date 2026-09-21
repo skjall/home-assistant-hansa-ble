@@ -22,6 +22,7 @@
     "bleak",
     "bleak_retry_connector"
   ],
+  "quality_scale": "custom",
   "requirements": [
     "bleak-retry-connector>=3.5.0",
     "hansa-ble-protocol==0.2.0"

@@ -242,6 +242,17 @@ def check_manifest() -> None:
             fail("integration-owner", f"manifest.json lacks {key}")
     if not manifest.get("codeowners"):
         fail("integration-owner", "manifest.json names no codeowner")
+    # Home Assistant reports "custom" for every integration outside core
+    # (loader.py, Integration.quality_scale), whatever the manifest claims.
+    # Any core tier here would be a claim the runtime never repeats.
+    scale = manifest.get("quality_scale")
+    if scale != "custom":
+        fail(
+            "integration-owner",
+            f'manifest.json must declare quality_scale "custom", not {scale!r}; '
+            "the tier this integration actually meets is recorded in "
+            "quality_scale.yaml",
+        )
 
 
 def check_brands() -> None:
