@@ -1,0 +1,157 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Select faucet",
+        "data": {
+          "address": "Faucet"
+        },
+        "data_description": {
+          "address": "The Hansa faucets currently within Bluetooth range."
+        }
+      },
+      "pin": {
+        "title": "PIN for {name}",
+        "description": "The same PIN you set in the HANSA app. It is checked against the faucet before the entry is created.",
+        "data": {
+          "pin": "PIN"
+        },
+        "data_description": {
+          "pin": "Needed to send commands and change settings. Readings work without it."
+        }
+      },
+      "reauth_confirm": {
+        "title": "PIN for {name}",
+        "description": "The faucet rejected the stored PIN. Enter the current one.",
+        "data": {
+          "pin": "PIN"
+        },
+        "data_description": {
+          "pin": "The PIN as set in the HANSA app."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure faucet",
+        "description": "Point this entry at a different faucet, or store a new PIN.",
+        "data": {
+          "address": "Faucet",
+          "pin": "PIN"
+        },
+        "data_description": {
+          "address": "The Hansa faucets currently within Bluetooth range.",
+          "pin": "Is checked against the selected faucet before anything is saved."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect. The faucet only accepts connections for a moment after it advertises - try again.",
+      "invalid_pin": "The faucet rejected that PIN.",
+      "not_in_range": "The faucet is not within range of any Bluetooth adapter.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "no_devices_found": "No Hansa faucet found within Bluetooth range.",
+      "already_configured": "This faucet is already set up.",
+      "reauth_successful": "The new PIN was accepted.",
+      "another_device": "That is a different faucet. Add it as its own entry.",
+      "reconfigure_successful": "The faucet was reconfigured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "data": {
+          "pin": "PIN",
+          "interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "pin": "Needed to send commands and change settings.",
+          "interval": "How long to wait before connecting again. The faucet is only reachable while it advertises, so the actual interval may be longer."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "valve_open": {
+        "name": "Valve"
+      }
+    },
+    "sensor": {
+      "total_volume": {
+        "name": "Total volume"
+      },
+      "openings": {
+        "name": "Openings"
+      },
+      "open_time": {
+        "name": "Open time"
+      },
+      "auto_flushes": {
+        "name": "Automatic flushes"
+      },
+      "since_last_use": {
+        "name": "Since last use"
+      },
+      "until_next_flush": {
+        "name": "Until next flush"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "sensor_error": {
+        "name": "Sensor error code"
+      }
+    },
+    "button": {
+      "open_valve": {
+        "name": "Open valve"
+      },
+      "cleaning_mode": {
+        "name": "Cleaning mode"
+      },
+      "normal_mode": {
+        "name": "Normal mode"
+      },
+      "identify": {
+        "name": "Identify"
+      },
+      "reset_counter": {
+        "name": "Reset interim counter"
+      }
+    },
+    "number": {
+      "max_run_time": {
+        "name": "Maximum run time"
+      },
+      "manual_flush_time": {
+        "name": "Manual flush time"
+      },
+      "cleaning_mode_time": {
+        "name": "Cleaning mode duration"
+      },
+      "run_on_time": {
+        "name": "Run-on time"
+      }
+    }
+  },
+  "exceptions": {
+    "no_scanner": {
+      "message": "No Bluetooth adapter is available."
+    },
+    "not_in_range": {
+      "message": "The faucet at {address} is not within range of any Bluetooth adapter."
+    },
+    "invalid_pin": {
+      "message": "The faucet rejected the stored PIN."
+    },
+    "command_failed": {
+      "message": "The command could not be sent to the faucet."
+    },
+    "write_failed": {
+      "message": "The setting could not be written to the faucet."
+    }
+  }
+}

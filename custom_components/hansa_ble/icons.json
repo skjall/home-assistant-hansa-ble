@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "valve_open": {
+        "default": "mdi:valve-closed",
+        "state": { "on": "mdi:valve-open" }
+      }
+    },
+    "sensor": {
+      "total_volume": { "default": "mdi:water" },
+      "openings": { "default": "mdi:counter" },
+      "open_time": { "default": "mdi:timer-play-outline" },
+      "auto_flushes": { "default": "mdi:autorenew" },
+      "since_last_use": { "default": "mdi:clock-outline" },
+      "until_next_flush": { "default": "mdi:clock-fast" },
+      "sensor_error": { "default": "mdi:alert-circle-outline" }
+    },
+    "button": {
+      "open_valve": { "default": "mdi:water" },
+      "cleaning_mode": { "default": "mdi:spray-bottle" },
+      "normal_mode": { "default": "mdi:water-sync" },
+      "identify": { "default": "mdi:eye" },
+      "reset_counter": { "default": "mdi:counter" }
+    },
+    "number": {
+      "max_run_time": { "default": "mdi:timer-sand" },
+      "manual_flush_time": { "default": "mdi:water-pump" },
+      "cleaning_mode_time": { "default": "mdi:spray-bottle" },
+      "run_on_time": { "default": "mdi:timer-outline" }
+    }
+  }
+}

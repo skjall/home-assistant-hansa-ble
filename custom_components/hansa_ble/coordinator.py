@@ -1,0 +1,234 @@
+"""Talking to the faucet.
+
+The device advertises for a short moment every few minutes and is connectable
+only during that window, so polling on a timer would mostly hit a device that
+is not listening. Instead every advertisement asks whether a poll is due, and
+the poll runs while we know the faucet is awake.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import TYPE_CHECKING, Any
+
+from bleak import BleakClient
+from bleak_retry_connector import establish_connection
+from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.active_update_coordinator import (
+    ActiveBluetoothDataUpdateCoordinator,
+)
+from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+
+from . import protocol
+from .const import (
+    CH_COMMAND,
+    CH_COUNTER_A,
+    CH_COUNTER_B,
+    CH_COUNTER_C,
+    CH_NONCE,
+    CH_PARAM_A,
+    CH_PASSWORD,
+    CH_PRODUCT_INFO,
+    CH_PRODUCT_LOCATION,
+    CH_PRODUCT_NAME,
+    CH_STATE_A,
+    CH_STATE_B,
+    DOMAIN,
+    MANUFACTURER_ID,
+)
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
+_LOGGER = logging.getLogger(__name__)
+
+# Reading every characteristic takes a handful of round trips; anything less
+# than this and BlueZ has not even finished resolving services yet.
+_CONNECT_TIMEOUT = 20.0
+
+_READERS: tuple[tuple[str, Any], ...] = (
+    (CH_PRODUCT_INFO, protocol.parse_product_info),
+    (CH_PRODUCT_NAME, protocol.parse_product_name),
+    (CH_PRODUCT_LOCATION, protocol.parse_product_location),
+    (CH_STATE_A, protocol.parse_state_a),
+    (CH_STATE_B, protocol.parse_state_b),
+    (CH_COUNTER_A, protocol.parse_counter_a),
+    (CH_COUNTER_B, protocol.parse_counter_b),
+    (CH_COUNTER_C, protocol.parse_counter_c),
+)
+
+
+class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]):
+    """Poll the faucet whenever it tells us it is awake."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        address: str,
+        device_name: str,
+        pin: str,
+        interval: int,
+    ) -> None:
+        """Set up the coordinator for one faucet."""
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            address=address,
+            needs_poll_method=self._needs_poll,
+            poll_method=self._async_poll_faucet,
+            mode=bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable=True,
+        )
+        self.device_name = device_name
+        self._pin = pin
+        self.interval = interval
+        self._lock = asyncio.Lock()
+        self.param_a_raw: bytes | None = None
+
+    @callback
+    def _needs_poll(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        seconds_since_last_poll: float | None,
+    ) -> bool:
+        """Decide, on every advertisement, whether to connect."""
+        if (
+            seconds_since_last_poll is not None
+            and seconds_since_last_poll < self.interval
+        ):
+            return False
+        return self.hass.state is CoreState.running and bool(
+            bluetooth.async_ble_device_from_address(
+                self.hass, service_info.device.address, connectable=True
+            )
+        )
+
+    def _ble_device(self) -> BLEDevice:
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+        if device is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_in_range",
+                translation_placeholders={"address": self.address},
+            )
+        return device
+
+    async def _async_connect(self, device: BLEDevice) -> BleakClient:
+        # A BleakClient is never reused across connections; doing so makes
+        # connecting markedly less reliable.
+        return await establish_connection(
+            BleakClient,
+            device,
+            self.address,
+            max_attempts=4,
+            timeout=_CONNECT_TIMEOUT,
+        )
+
+    @callback
+    def _after_disconnect(self) -> None:
+        """Let the next identical advertisement through again.
+
+        The Bluetooth manager drops advertisements that are byte for byte the
+        same as the previous one. The faucet's "I am awake" packet rarely
+        changes, so without this the next wake-up would never reach us.
+        """
+        bluetooth.async_clear_advertisement_history(self.hass, self.address)
+
+    async def _async_authenticate(self, client: BleakClient) -> None:
+        """Challenge-response. Only writes need it; reading works without."""
+        nonce = bytes(await client.read_gatt_char(CH_NONCE))
+        password = bytes(await client.read_gatt_char(CH_PASSWORD))
+        await client.write_gatt_char(
+            CH_PASSWORD,
+            protocol.auth_response(nonce, password, self._pin),
+            response=True,
+        )
+        if not protocol.is_authenticated(bytes(await client.read_gatt_char(CH_NONCE))):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_pin"
+            )
+
+    async def _async_read_all(self, client: BleakClient) -> protocol.FaucetData:
+        """Read every characteristic over an open connection."""
+        values: dict[str, Any] = {}
+        for uuid, parse in _READERS:
+            values.update(parse(bytes(await client.read_gatt_char(uuid))))
+        self.param_a_raw = bytes(await client.read_gatt_char(CH_PARAM_A))
+        values.update(protocol.parse_param_a(self.param_a_raw))
+        return protocol.FaucetData(values)
+
+    async def _async_poll_faucet(
+        self, service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> protocol.FaucetData:
+        """Read every characteristic while the faucet is awake."""
+        async with self._lock:
+            client = await self._async_connect(service_info.device)
+            try:
+                return await self._async_read_all(client)
+            finally:
+                await client.disconnect()
+                self._after_disconnect()
+
+    async def async_send_command(self, command: int) -> None:
+        """Authenticate, write a single command byte, then read back the result."""
+        async with self._lock:
+            client = await self._async_connect(self._ble_device())
+            try:
+                await self._async_authenticate(client)
+                await client.write_gatt_char(
+                    CH_COMMAND, bytes([command]), response=True
+                )
+                self.data = await self._async_read_all(client)
+            except ConfigEntryAuthFailed:
+                raise
+            except Exception as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="command_failed"
+                ) from err
+            finally:
+                await client.disconnect()
+                self._after_disconnect()
+        self.async_update_listeners()
+
+    async def async_set_parameter(self, field: str, value: int) -> None:
+        """Change one field of productParamA.
+
+        The whole block is written back: read, change one field, write. That is
+        what the vendor app does when it transfers settings to the device.
+        """
+        async with self._lock:
+            client = await self._async_connect(self._ble_device())
+            try:
+                await self._async_authenticate(client)
+                current = bytes(await client.read_gatt_char(CH_PARAM_A))
+                await client.write_gatt_char(
+                    CH_PARAM_A,
+                    protocol.write_param_a(current, field, value),
+                    response=True,
+                )
+                self.data = await self._async_read_all(client)
+            except ConfigEntryAuthFailed:
+                raise
+            except Exception as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="write_failed"
+                ) from err
+            finally:
+                await client.disconnect()
+                self._after_disconnect()
+        self.async_update_listeners()
+
+    @callback
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Take the battery level out of the advertisement, free of charge."""
+        if (raw := service_info.manufacturer_data.get(MANUFACTURER_ID)) and self.data:
+            self.data.values.update(protocol.parse_advertisement(bytes(raw)))
+        super()._async_handle_bluetooth_event(service_info, change)

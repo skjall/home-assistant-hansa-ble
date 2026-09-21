@@ -1,0 +1,157 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Wasserhahn auswählen",
+        "data": {
+          "address": "Wasserhahn"
+        },
+        "data_description": {
+          "address": "Die Hansa-Wasserhähne, die gerade per Bluetooth erreichbar sind."
+        }
+      },
+      "pin": {
+        "title": "PIN für {name}",
+        "description": "Dieselbe PIN wie in der HANSA-App. Sie wird am Wasserhahn geprüft, bevor der Eintrag angelegt wird.",
+        "data": {
+          "pin": "PIN"
+        },
+        "data_description": {
+          "pin": "Nötig für Kommandos und Einstellungen. Ausgelesen wird auch ohne."
+        }
+      },
+      "reauth_confirm": {
+        "title": "PIN für {name}",
+        "description": "Der Wasserhahn hat die gespeicherte PIN abgelehnt. Bitte die aktuelle eingeben.",
+        "data": {
+          "pin": "PIN"
+        },
+        "data_description": {
+          "pin": "Die PIN, wie sie in der HANSA-App gesetzt ist."
+        }
+      },
+      "reconfigure": {
+        "title": "Wasserhahn neu einrichten",
+        "description": "Diesen Eintrag auf einen anderen Wasserhahn richten oder eine neue PIN hinterlegen.",
+        "data": {
+          "address": "Wasserhahn",
+          "pin": "PIN"
+        },
+        "data_description": {
+          "address": "Die Hansa-Wasserhähne, die gerade per Bluetooth erreichbar sind.",
+          "pin": "Wird am ausgewählten Wasserhahn geprüft, bevor etwas gespeichert wird."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Keine Verbindung. Der Wasserhahn nimmt nur kurz nach seinem Funkruf Verbindungen an – bitte erneut versuchen.",
+      "invalid_pin": "Der Wasserhahn hat diese PIN abgelehnt.",
+      "not_in_range": "Der Wasserhahn ist für keinen Bluetooth-Adapter in Reichweite.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "no_devices_found": "Kein Hansa-Wasserhahn in Bluetooth-Reichweite gefunden.",
+      "already_configured": "Dieser Wasserhahn ist bereits eingerichtet.",
+      "reauth_successful": "Die neue PIN wurde angenommen.",
+      "another_device": "Das ist ein anderer Wasserhahn. Bitte als eigenen Eintrag anlegen.",
+      "reconfigure_successful": "Der Wasserhahn wurde neu eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Einstellungen",
+        "data": {
+          "pin": "PIN",
+          "interval": "Abrufintervall (Sekunden)"
+        },
+        "data_description": {
+          "pin": "Nötig für Kommandos und Einstellungen.",
+          "interval": "Wie lange bis zur nächsten Verbindung gewartet wird. Der Wasserhahn ist nur während seines Funkrufs erreichbar, der tatsächliche Abstand kann also größer sein."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "valve_open": {
+        "name": "Ventil"
+      }
+    },
+    "sensor": {
+      "total_volume": {
+        "name": "Gesamtverbrauch"
+      },
+      "openings": {
+        "name": "Ventilöffnungen"
+      },
+      "open_time": {
+        "name": "Öffnungszeit"
+      },
+      "auto_flushes": {
+        "name": "Automatische Spülungen"
+      },
+      "since_last_use": {
+        "name": "Seit letzter Nutzung"
+      },
+      "until_next_flush": {
+        "name": "Bis zur nächsten Spülung"
+      },
+      "battery_voltage": {
+        "name": "Batteriespannung"
+      },
+      "sensor_error": {
+        "name": "Sensor-Fehlercode"
+      }
+    },
+    "button": {
+      "open_valve": {
+        "name": "Ventil öffnen"
+      },
+      "cleaning_mode": {
+        "name": "Reinigungsmodus"
+      },
+      "normal_mode": {
+        "name": "Normalbetrieb"
+      },
+      "identify": {
+        "name": "Identifizieren"
+      },
+      "reset_counter": {
+        "name": "Zwischenzähler zurücksetzen"
+      }
+    },
+    "number": {
+      "max_run_time": {
+        "name": "Maximale Laufzeit"
+      },
+      "manual_flush_time": {
+        "name": "Manuelle Spülzeit"
+      },
+      "cleaning_mode_time": {
+        "name": "Laufzeit Reinigungsmodus"
+      },
+      "run_on_time": {
+        "name": "Nachlaufzeit"
+      }
+    }
+  },
+  "exceptions": {
+    "no_scanner": {
+      "message": "Es ist kein Bluetooth-Adapter verfügbar."
+    },
+    "not_in_range": {
+      "message": "Der Wasserhahn {address} ist für keinen Bluetooth-Adapter in Reichweite."
+    },
+    "invalid_pin": {
+      "message": "Der Wasserhahn hat die gespeicherte PIN abgelehnt."
+    },
+    "command_failed": {
+      "message": "Das Kommando konnte nicht an den Wasserhahn gesendet werden."
+    },
+    "write_failed": {
+      "message": "Die Einstellung konnte nicht auf den Wasserhahn geschrieben werden."
+    }
+  }
+}

@@ -1,0 +1,98 @@
+# Whatever is marked done here, scripts/check_quality_scale.py verifies on
+# every commit, as far as a machine can. If the code falls behind, the commit
+# fails - so the tier cannot be kept by claiming it, only by holding it.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration registers no service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: todo
+    comment: |
+      The package exists: lib/hansa_ble_protocol, MIT licensed, built and
+      published by .github/workflows/publish-protocol.yml through PyPI
+      Trusted Publishing. What is left is outside this repository - the
+      project has to be created on pypi.org and this workflow registered as
+      its trusted publisher. Until the first release is on PyPI the
+      integration keeps its own copy of protocol.py, and the quality-scale
+      check makes sure the two stay identical.
+  docs-actions:
+    status: exempt
+    comment: The integration provides no actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Every subscription is handled by the coordinator base class.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      A Bluetooth address is the device identity here; there is no network
+      address that could change underneath it.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: One config entry is exactly one faucet.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Everything that can go wrong is either transient (out of range) or
+      already handled by the reauthentication flow.
+  stale-devices:
+    status: exempt
+    comment: Removing the entry removes the device; there is nothing to go stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The integration speaks Bluetooth, not HTTP.
+  strict-typing: done

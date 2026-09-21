@@ -1,0 +1,13 @@
+# Home Assistant comes with pytest-homeassistant-custom-component; the
+# requirements of the bluetooth component do not. The versions come from its
+# manifest.json in the Home Assistant release being tested against.
+pytest-homeassistant-custom-component
+bleak==3.0.2
+bleak-retry-connector==4.7.0
+bluetooth-adapters==2.4.0
+bluetooth-auto-recovery==1.6.4
+bluetooth-data-tools==1.29.24
+dbus-fast==5.0.22
+habluetooth==6.26.11
+aiousbwatcher==1.1.2
+serialx==1.10.0

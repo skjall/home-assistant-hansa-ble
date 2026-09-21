@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hansa-ble-protocol"
+version = "0.1.0"
+description = "Wire protocol of Hansa/Oras Bluetooth Low Energy faucets"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+authors = [{ name = "Jan Großheim" }]
+keywords = ["hansa", "oras", "bluetooth", "ble", "faucet", "home-assistant"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Home Automation",
+  "Typing :: Typed",
+]
+dependencies = ["cryptography>=42.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/skjall/home-assistant-hansa-ble"
+Source = "https://github.com/skjall/home-assistant-hansa-ble/tree/main/lib/hansa_ble_protocol"
+Issues = "https://github.com/skjall/home-assistant-hansa-ble/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hansa_ble_protocol"]

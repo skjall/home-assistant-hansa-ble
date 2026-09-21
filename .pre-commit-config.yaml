@@ -1,0 +1,52 @@
+# The quality tier is enforced here, not asserted: whatever quality_scale.yaml
+# lists as done has to survive its check, and the coverage floors that tier
+# requires have to hold.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args: [--maxkb=600]
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: quality-scale
+        name: Quality scale - the code holds what quality_scale.yaml claims
+        entry: python3 scripts/check_quality_scale.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: mypy
+        name: Types - mypy --strict (platinum)
+        entry: scripts/run_mypy.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: tests
+        name: Tests - against the targeted Home Assistant, in Docker
+        entry: scripts/run_tests.sh -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: coverage
+        name: Coverage - the floors the claimed tier requires
+        entry: python3 scripts/check_coverage.py
+        language: system
+        pass_filenames: false
+        always_run: true
