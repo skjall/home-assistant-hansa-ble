@@ -285,6 +285,31 @@ def check_dependency_transparency() -> None:
             "dependency-transparency",
             "protocol.py is back in the integration; it belongs in the package",
         )
+    # release-please raises both this pin and the version in lib/ in the same
+    # commit (see release-please-config.json), so they can only drift apart if
+    # someone edits one by hand -- and then the integration would install a
+    # version of the protocol that nobody built.
+    pinned = next(
+        (
+            r.split("==", 1)[1]
+            for r in requirements
+            if r.startswith("hansa-ble-protocol==")
+        ),
+        None,
+    )
+    packaged = re.search(
+        r'^version = "([^"]+)"',
+        (ROOT / "lib" / "hansa_ble_protocol" / "pyproject.toml").read_text(
+            encoding="utf-8"
+        ),
+        re.MULTILINE,
+    )
+    if pinned and packaged and pinned != packaged.group(1):
+        fail(
+            "dependency-transparency",
+            f"manifest.json pins hansa-ble-protocol=={pinned}, but the package "
+            f"in lib/ is at {packaged.group(1)}",
+        )
 
 
 def check_strict_typing() -> None:

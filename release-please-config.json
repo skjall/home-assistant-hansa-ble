@@ -12,6 +12,11 @@
           "jsonpath": "$.version"
         },
         {
+          "type": "json",
+          "path": "custom_components/hansa_ble/manifest.json",
+          "jsonpath": "$.requirements[?(@.match && @.match(/^hansa-ble-protocol==/))]"
+        },
+        {
           "type": "generic",
           "path": "lib/hansa_ble_protocol/pyproject.toml"
         }

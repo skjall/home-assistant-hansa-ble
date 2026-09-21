@@ -17,6 +17,13 @@
   },
   "packageRules": [
     {
+      "description": "The protocol package lives in this repository and release-please raises its pin in manifest.json together with the version in lib/. A Renovate PR for it would race that commit.",
+      "matchPackageNames": [
+        "hansa-ble-protocol"
+      ],
+      "enabled": false
+    },
+    {
       "description": "The runtime dependency of the protocol package. It ends up in every install, so a human looks at it.",
       "matchFileNames": [
         "lib/hansa_ble_protocol/pyproject.toml"
