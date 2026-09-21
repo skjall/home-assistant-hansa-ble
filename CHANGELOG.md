@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.1...v0.3.2) (2026-09-21)
+
+
+### Bug Fixes
+
+* raise the protocol pin with the release that builds it ([6bdf709](https://github.com/skjall/home-assistant-hansa-ble/commit/6bdf709395c5f8aa046fa3109bb34b76e1176de6))
+* raise the protocol pin with the release that builds it ([adff6a1](https://github.com/skjall/home-assistant-hansa-ble/commit/adff6a1838ab635cd6020c2635428ec8c7d1ac55))
+
 ## [0.3.1](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.0...v0.3.1) (2026-09-21)
 
 
