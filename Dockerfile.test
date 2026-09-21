@@ -11,6 +11,7 @@ COPY requirements-test.txt scripts/ha_test_requirements.py /tmp/setup/
 RUN pip install --no-cache-dir -r /tmp/setup/requirements-test.txt \
  && python /tmp/setup/ha_test_requirements.py > /tmp/setup/bluetooth.txt \
  && pip install --no-cache-dir -r /tmp/setup/bluetooth.txt \
+ && pip install --no-cache-dir hansa-ble-protocol \
  && rm -rf /tmp/setup
 
 WORKDIR /app

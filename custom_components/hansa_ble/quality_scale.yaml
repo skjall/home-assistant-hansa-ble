@@ -11,16 +11,7 @@ rules:
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
-  dependency-transparency:
-    status: todo
-    comment: |
-      The package exists: lib/hansa_ble_protocol, MIT licensed, built and
-      published by .github/workflows/publish-protocol.yml through PyPI
-      Trusted Publishing. What is left is outside this repository - the
-      project has to be created on pypi.org and this workflow registered as
-      its trusted publisher. Until the first release is on PyPI the
-      integration keeps its own copy of protocol.py, and the quality-scale
-      check makes sure the two stay identical.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration provides no actions.

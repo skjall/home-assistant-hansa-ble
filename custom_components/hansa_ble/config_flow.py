@@ -6,6 +6,7 @@ import logging
 from collections.abc import Mapping
 from typing import Any
 
+import hansa_ble_protocol as protocol
 import voluptuous as vol
 from bleak import BleakClient
 from bleak_retry_connector import establish_connection
@@ -26,7 +27,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import HansaConfigEntry, protocol
+from . import HansaConfigEntry
 from .const import (
     CH_NONCE,
     CH_PASSWORD,

@@ -12,6 +12,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+import hansa_ble_protocol as protocol
 from bleak import BleakClient
 from bleak_retry_connector import establish_connection
 from homeassistant.components import bluetooth
@@ -21,7 +22,6 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
-from . import protocol
 from .const import (
     CH_COMMAND,
     CH_COUNTER_A,

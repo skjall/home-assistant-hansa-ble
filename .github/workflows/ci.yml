@@ -41,7 +41,7 @@ jobs:
 
       # Platinum tier: strict typing, so nothing less than strict here.
       - name: Install dependencies
-        run: pip install mypy pytest-homeassistant-custom-component
+        run: pip install mypy pytest-homeassistant-custom-component hansa-ble-protocol
 
       - name: Type check
         run: mypy --strict --ignore-missing-imports custom_components/hansa_ble
@@ -66,6 +66,8 @@ jobs:
           # Home Assistant release, not from a hand-maintained pin.
           python scripts/ha_test_requirements.py > /tmp/bluetooth.txt
           pip install -r /tmp/bluetooth.txt
+          # The wire protocol now comes from PyPI, like it does for users.
+          pip install hansa-ble-protocol
 
       - name: Run pytest
         run: |

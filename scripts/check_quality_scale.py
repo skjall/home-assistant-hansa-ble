@@ -24,7 +24,6 @@ PLATFORMS = ("binary_sensor", "button", "number", "sensor")
 NOT_CHECKABLE = {
     "appropriate-polling",
     "async-dependency",
-    "dependency-transparency",
     "docs-actions",
     "docs-conditions",
     "docs-triggers",
@@ -261,21 +260,19 @@ def check_brands() -> None:
         )
 
 
-def check_protocol_copies_match() -> None:
-    """The split-out package and the copy in the integration must not drift.
-
-    Until hansa-ble-protocol is on PyPI the integration still carries its own
-    protocol.py. Two copies of a wire format are two chances to get it wrong,
-    so they have to stay byte for byte identical.
-    """
-    package = ROOT / "lib/hansa_ble_protocol/src/hansa_ble_protocol/protocol.py"
-    integration = PKG / "protocol.py"
-    if not package.exists():
-        return
-    if package.read_bytes() != integration.read_bytes():
+def check_dependency_transparency() -> None:
+    """The wire protocol has to come from PyPI, not from inside the integration."""
+    manifest = load_json("manifest.json")
+    requirements = manifest.get("requirements", [])
+    if not any(r.startswith("hansa-ble-protocol==") for r in requirements):
         fail(
             "dependency-transparency",
-            "protocol.py differs between the package and the integration",
+            "manifest.json does not require a pinned hansa-ble-protocol",
+        )
+    if (PKG / "protocol.py").exists():
+        fail(
+            "dependency-transparency",
+            "protocol.py is back in the integration; it belongs in the package",
         )
 
 
@@ -352,6 +349,7 @@ CHECKS = {
     "brands": check_brands,
     "diagnostics": check_diagnostics,
     "strict-typing": check_strict_typing,
+    "dependency-transparency": check_dependency_transparency,
     "devices": check_devices,
     "discovery": check_discovery,
     "entity-disabled-by-default": check_disabled_by_default,
@@ -373,8 +371,6 @@ def main() -> int:
             claimed.add(slug)
         elif status not in ("todo", "exempt"):
             fail(slug, f"unknown status '{status}'")
-
-    check_protocol_copies_match()
 
     for slug in sorted(claimed):
         if check := CHECKS.get(slug):

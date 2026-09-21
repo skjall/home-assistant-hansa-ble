@@ -23,7 +23,8 @@
     "bleak_retry_connector"
   ],
   "requirements": [
-    "bleak-retry-connector>=3.5.0"
+    "bleak-retry-connector>=3.5.0",
+    "hansa-ble-protocol==0.2.0"
   ],
   "version": "0.2.0"
 }

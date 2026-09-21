@@ -18,8 +18,9 @@ ROOT = Path(__file__).resolve().parent.parent
 FLOORS = {
     "custom_components/hansa_ble/config_flow.py": 100.0,
     "custom_components/hansa_ble/coordinator.py": 95.0,
-    "custom_components/hansa_ble/protocol.py": 95.0,
 }
+# The wire protocol moved to the hansa_ble_protocol package and is covered by
+# that package's own tests, which the CI runs in a job of its own.
 OVERALL = 95.0
 
 
