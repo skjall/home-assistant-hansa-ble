@@ -1,9 +1,15 @@
-name: Publish protocol package
+name: Publish protocol package (manual)
 
+# Manual only. Releases publish through release.yml; a tag trigger cannot
+# work here, because release-please creates its tag with the GITHUB_TOKEN and
+# such tags do not start workflows.
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or branch to build from"
+        required: true
+        default: main
 
 permissions:
   contents: read
@@ -13,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
