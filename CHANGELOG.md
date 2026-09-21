@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.0...v0.3.1) (2026-09-21)
+
+
+### Bug Fixes
+
+* install the protocol package version that was just released ([374d49e](https://github.com/skjall/home-assistant-hansa-ble/commit/374d49eef9b50b56ca4798c367e02e4350b4fbf7))
+* install the protocol package version that was just released ([8b50048](https://github.com/skjall/home-assistant-hansa-ble/commit/8b50048ec8d78990dba167bbf33c11bfb4bedaf2))
+* stop the pin check from deadlocking every future release ([2642ed7](https://github.com/skjall/home-assistant-hansa-ble/commit/2642ed7b9f74d7ff89967097698cbbec1e225b8f))
+* stop the pin check from deadlocking every future release ([ca7f18f](https://github.com/skjall/home-assistant-hansa-ble/commit/ca7f18f62994934e8509baf61459a3498a9e5c3e))
+
 ## [0.3.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.2.0...v0.3.0) (2026-09-21)
 
 
