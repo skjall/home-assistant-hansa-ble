@@ -1,0 +1,107 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "baseBranchPatterns": [
+    "main"
+  ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "deps",
+  "semanticCommitScope": null,
+  "constraints": {
+    "python": "3.14"
+  },
+  "pre-commit": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "These versions are copied from the bluetooth component's manifest.json in the Home Assistant release this integration targets. Bumping one on its own means testing a combination that no Home Assistant install actually has, so they are grouped, never auto-merged, and reviewed together with the targeted version.",
+      "matchFileNames": [
+        "requirements-test.txt",
+        "Dockerfile.test"
+      ],
+      "matchPackageNames": [
+        "bleak",
+        "bleak-retry-connector",
+        "bluetooth-adapters",
+        "bluetooth-auto-recovery",
+        "bluetooth-data-tools",
+        "dbus-fast",
+        "habluetooth",
+        "aiousbwatcher",
+        "serialx"
+      ],
+      "groupName": "Home Assistant bluetooth stack (pinned to the targeted release)",
+      "automerge": false,
+      "addLabels": [
+        "needs-ha-version-check"
+      ],
+      "reviewers": [
+        "Skjall"
+      ]
+    },
+    {
+      "description": "The runtime dependency of the protocol package. It ends up in every install, so a human looks at it.",
+      "matchFileNames": [
+        "lib/hansa_ble_protocol/pyproject.toml"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "reviewers": [
+        "Skjall"
+      ]
+    },
+    {
+      "matchCategories": [
+        "python"
+      ],
+      "groupName": "Python dependencies",
+      "matchPackageNames": [
+        "*"
+      ]
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Auto-merge low-risk updates once CI is green; no review request needed. CI runs the full test suite, mypy --strict and the quality-scale gate, so a green run is a real statement.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Major updates: never auto-merge, request review",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false,
+      "reviewers": [
+        "Skjall"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 2,
+  "labels": [
+    "dependencies",
+    "type: chore"
+  ],
+  "assignees": [
+    "Skjall"
+  ]
+}
