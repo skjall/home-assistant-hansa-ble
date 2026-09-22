@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.3](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.2...v0.3.3) (2026-09-22)
+
+
+### Bug Fixes
+
+* **coordinator:** put a deadline on every connection to the faucet ([4bc858d](https://github.com/skjall/home-assistant-hansa-ble/commit/4bc858dc18f92e4c0641c6fb4decf8baf30b3885))
+* **coordinator:** put a deadline on every connection to the faucet ([c10c309](https://github.com/skjall/home-assistant-hansa-ble/commit/c10c309417446d998098bf6ca963e7352a21302c))
+
 ## [0.3.2](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.1...v0.3.2) (2026-09-21)
 
 
