@@ -31,3 +31,17 @@ convention = "pep257"
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
+
+[tool.ha_standards]
+# Defaults apply when a key is absent; write one down only when this
+# project genuinely differs. See the standards document for what each
+# key means.
+# overall_coverage = 95
+# unenforceable = []
+# The valve sensor takes its translation key from the entity key rather than
+# from a keyword, so no check can see it in the source.
+derived_translation_keys = ["binary_sensor:valve_open"]
+
+[tool.ha_standards.coverage]
+"config_flow.py" = 100
+"coordinator.py" = 95

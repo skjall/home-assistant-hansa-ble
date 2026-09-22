@@ -3,8 +3,53 @@ default_stages: [pre-commit]
 
 # The quality tier is enforced here, not asserted: whatever quality_scale.yaml
 # lists as done has to survive its check, and the coverage floors that tier
-# requires have to hold.
+# requires have to hold. The gates come from ha-integration-standards, so
+# raising its rev is how this project takes a newer set of rules.
 repos:
+  - repo: local
+    hooks:
+      # Written by ha-integration-standards 0.1.0; `ha-standards sync`
+      # updates them. Run `python3 scripts/_ha_standards/run.py --help` to see the gates.
+      - id: ha-verify
+        name: Gates - the vendored copy is the one that was synced
+        entry: python3 scripts/_ha_standards/run.py verify
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ha-quality-scale
+        name: Quality scale - the code holds what quality_scale.yaml claims
+        entry: python3 scripts/_ha_standards/run.py quality-scale
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ha-types
+        name: Types - mypy --strict against the targeted Home Assistant
+        entry: python3 scripts/_ha_standards/run.py types
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ha-tests
+        name: Tests - against the targeted Home Assistant, in Docker
+        entry: python3 scripts/_ha_standards/run.py tests -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ha-coverage
+        name: Coverage - the floors the claimed tier requires
+        entry: python3 scripts/_ha_standards/run.py coverage
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ha-commit-message
+        name: Commit message - Conventional Commits, in English
+        entry: python3 scripts/_ha_standards/run.py commit-message
+        language: system
+        stages: [commit-msg]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.8
     hooks:
@@ -23,39 +68,3 @@ repos:
         args: [--maxkb=600]
       - id: check-merge-conflict
       - id: detect-private-key
-
-  - repo: local
-    hooks:
-      - id: commit-message
-        name: Commit message - Conventional Commits, in English
-        entry: python3 scripts/check_commit_message.py
-        language: system
-        stages: [commit-msg]
-
-      - id: quality-scale
-        name: Quality scale - the code holds what quality_scale.yaml claims
-        entry: python3 scripts/check_quality_scale.py
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: mypy
-        name: Types - mypy --strict (platinum)
-        entry: scripts/run_mypy.sh
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: tests
-        name: Tests - against the targeted Home Assistant, in Docker
-        entry: scripts/run_tests.sh -q
-        language: system
-        pass_filenames: false
-        always_run: true
-
-      - id: coverage
-        name: Coverage - the floors the claimed tier requires
-        entry: python3 scripts/check_coverage.py
-        language: system
-        pass_filenames: false
-        always_run: true
