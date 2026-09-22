@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hansa-ble-protocol"
-version = "0.3.3" # x-release-please-version
+version = "0.4.0" # x-release-please-version
 description = "Wire protocol of Hansa/Oras Bluetooth Low Energy faucets"
 readme = "README.md"
 license = "MIT"

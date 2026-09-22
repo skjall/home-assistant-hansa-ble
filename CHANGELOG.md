@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.3...v0.4.0) (2026-09-22)
+
+
+### Features
+
+* **brand:** ship the integration's own icon ([43efd16](https://github.com/skjall/home-assistant-hansa-ble/commit/43efd16862733e7a2b277763c5c4072f074cd5ec))
+* **brand:** ship the integration's own icon ([fb50ef7](https://github.com/skjall/home-assistant-hansa-ble/commit/fb50ef71b629ba3f47324ff6784531869c918bb8))
+
 ## [0.3.3](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.2...v0.3.3) (2026-09-22)
 
 
