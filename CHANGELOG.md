@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.4.0...v0.4.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **coordinator:** clear the advertisement history when connecting fails ([2d822c0](https://github.com/skjall/home-assistant-hansa-ble/commit/2d822c0db0dc03bc22fad2ee97bb07f1a1b391c8))
+* **coordinator:** clear the advertisement history when connecting fails ([b151267](https://github.com/skjall/home-assistant-hansa-ble/commit/b15126780ac4f200df98aa4fde3996dd0ebd3013))
+
 ## [0.4.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.3.3...v0.4.0) (2026-09-22)
 
 
