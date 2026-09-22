@@ -43,4 +43,4 @@ class HansaValve(HansaEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Only report once a poll has produced a state."""
-        return super().available and self.coordinator.data is not None
+        return super().available and self._has_readings

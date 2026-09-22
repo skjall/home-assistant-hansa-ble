@@ -39,6 +39,20 @@ class HansaEntity(PassiveBluetoothCoordinatorEntity[HansaCoordinator]):
             serial_number=str(data.get("serial_number")) if data else None,
         )
 
+    @property
+    def _has_readings(self) -> bool:
+        """Whether the last poll left readings worth showing.
+
+        Home Assistant keeps the coordinator available for as long as
+        advertisements arrive, which says nothing about the poll behind them:
+        the faucet can be announcing itself every few minutes while every
+        attempt to read it fails. Then the honest answer is unavailable, not
+        the values from hours ago.
+        """
+        return (
+            self.coordinator.last_poll_successful and self.coordinator.data is not None
+        )
+
     def _value(self, key: str | None = None) -> Any:
         """Return one reading, or None while nothing has been read yet."""
         data = self.coordinator.data

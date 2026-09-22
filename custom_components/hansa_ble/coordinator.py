@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 import hansa_ble_protocol as protocol
 from bleak import BleakClient
+from bleak.exc import BleakError
 from bleak_retry_connector import establish_connection
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -47,6 +48,16 @@ _LOGGER = logging.getLogger(__name__)
 # Reading every characteristic takes a handful of round trips; anything less
 # than this and BlueZ has not even finished resolving services yet.
 _CONNECT_TIMEOUT = 20.0
+
+# Four connection attempts at _CONNECT_TIMEOUT each, plus the dozen reads that
+# follow, fit inside this. A GATT read that never returns does not, and that is
+# the point: nothing may outlive the poll it belongs to. Bleak puts no deadline
+# of its own on a read, so a sleeping faucet that never drops the link would
+# otherwise hold the lock until Home Assistant restarts.
+_POLL_TIMEOUT = 120.0
+
+# Hanging up is best effort - by then the faucet is asleep either way.
+_DISCONNECT_TIMEOUT = 10.0
 
 _READERS: tuple[tuple[str, Any], ...] = (
     (CH_PRODUCT_INFO, protocol.parse_product_info),
@@ -138,6 +149,22 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         """
         bluetooth.async_clear_advertisement_history(self.hass, self.address)
 
+    async def _async_disconnect(self, client: BleakClient) -> None:
+        """Hang up, then let the next advertisement through.
+
+        A disconnect that never returns holds the lock just as surely as a
+        hanging read, so it gets a deadline of its own - and the history is
+        cleared either way, because a failed hang-up must not cost the next
+        wake-up too.
+        """
+        try:
+            async with asyncio.timeout(_DISCONNECT_TIMEOUT):
+                await client.disconnect()
+        except (TimeoutError, BleakError) as err:
+            _LOGGER.debug("%s: disconnecting failed: %s", self.address, err)
+        finally:
+            self._after_disconnect()
+
     async def _async_authenticate(self, client: BleakClient) -> None:
         """Challenge-response. Only writes need it; reading works without."""
         nonce = bytes(await client.read_gatt_char(CH_NONCE))
@@ -164,34 +191,51 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
     async def _async_poll_faucet(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> protocol.FaucetData:
-        """Read every characteristic while the faucet is awake."""
-        async with self._lock:
+        """Read every characteristic while the faucet is awake.
+
+        The deadline covers acquiring the lock as well. Home Assistant only
+        counts a poll as failed when it raises, so a poll that hangs instead
+        leaves the coordinator reporting its last success for ever, and every
+        later poll queues up behind the lock. That is silent: no error, no
+        retry, no entity that admits to being stale.
+        """
+        async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
             client = await self._async_connect(service_info.device)
             try:
                 return await self._async_read_all(client)
             finally:
-                await client.disconnect()
-                self._after_disconnect()
+                await self._async_disconnect(client)
+
+    @callback
+    def _async_store(self, data: protocol.FaucetData) -> None:
+        """Record a reading taken outside the poll loop.
+
+        A command reads everything back over the same connection, so it proves
+        the device answers just as a poll does. Saying so keeps the entities
+        from staying unavailable after an earlier poll failed.
+        """
+        self.data = data
+        self.last_poll_successful = True
 
     async def async_send_command(self, command: int) -> None:
         """Authenticate, write a single command byte, then read back the result."""
-        async with self._lock:
-            client = await self._async_connect(self._ble_device())
-            try:
-                await self._async_authenticate(client)
-                await client.write_gatt_char(
-                    CH_COMMAND, bytes([command]), response=True
-                )
-                self.data = await self._async_read_all(client)
-            except ConfigEntryAuthFailed:
-                raise
-            except Exception as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="command_failed"
-                ) from err
-            finally:
-                await client.disconnect()
-                self._after_disconnect()
+        try:
+            async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
+                client = await self._async_connect(self._ble_device())
+                try:
+                    await self._async_authenticate(client)
+                    await client.write_gatt_char(
+                        CH_COMMAND, bytes([command]), response=True
+                    )
+                    self._async_store(await self._async_read_all(client))
+                finally:
+                    await self._async_disconnect(client)
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            ) from err
         self.async_update_listeners()
 
     async def async_set_parameter(self, field: str, value: int) -> None:
@@ -200,26 +244,26 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         The whole block is written back: read, change one field, write. That is
         what the vendor app does when it transfers settings to the device.
         """
-        async with self._lock:
-            client = await self._async_connect(self._ble_device())
-            try:
-                await self._async_authenticate(client)
-                current = bytes(await client.read_gatt_char(CH_PARAM_A))
-                await client.write_gatt_char(
-                    CH_PARAM_A,
-                    protocol.write_param_a(current, field, value),
-                    response=True,
-                )
-                self.data = await self._async_read_all(client)
-            except ConfigEntryAuthFailed:
-                raise
-            except Exception as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="write_failed"
-                ) from err
-            finally:
-                await client.disconnect()
-                self._after_disconnect()
+        try:
+            async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
+                client = await self._async_connect(self._ble_device())
+                try:
+                    await self._async_authenticate(client)
+                    current = bytes(await client.read_gatt_char(CH_PARAM_A))
+                    await client.write_gatt_char(
+                        CH_PARAM_A,
+                        protocol.write_param_a(current, field, value),
+                        response=True,
+                    )
+                    self._async_store(await self._async_read_all(client))
+                finally:
+                    await self._async_disconnect(client)
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="write_failed"
+            ) from err
         self.async_update_listeners()
 
     @callback
