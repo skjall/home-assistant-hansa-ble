@@ -146,20 +146,28 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         The Bluetooth manager drops advertisements that are byte for byte the
         same as the previous one. The faucet's "I am awake" packet rarely
         changes, so without this the next wake-up would never reach us.
+
+        Which makes a failed connection the worst moment to skip it. No
+        advertisement reaches the coordinator, so nothing asks for a poll, so
+        nothing tries again: one refused connection and the faucet stays
+        unavailable until the entry is reloaded. Observed in the field, for
+        four hours, with the device advertising at -50 dBm the whole time.
         """
         bluetooth.async_clear_advertisement_history(self.hass, self.address)
 
-    async def _async_disconnect(self, client: BleakClient) -> None:
+    async def _async_disconnect(self, client: BleakClient | None) -> None:
         """Hang up, then let the next advertisement through.
 
         A disconnect that never returns holds the lock just as surely as a
         hanging read, so it gets a deadline of its own - and the history is
-        cleared either way, because a failed hang-up must not cost the next
-        wake-up too.
+        cleared however this ended, including when there is no client at all
+        because connecting is what failed. That case is the one that strands
+        the integration: see `_after_disconnect`.
         """
         try:
-            async with asyncio.timeout(_DISCONNECT_TIMEOUT):
-                await client.disconnect()
+            if client is not None:
+                async with asyncio.timeout(_DISCONNECT_TIMEOUT):
+                    await client.disconnect()
         except (TimeoutError, BleakError) as err:
             _LOGGER.debug("%s: disconnecting failed: %s", self.address, err)
         finally:
@@ -200,8 +208,9 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         retry, no entity that admits to being stale.
         """
         async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
-            client = await self._async_connect(service_info.device)
+            client: BleakClient | None = None
             try:
+                client = await self._async_connect(service_info.device)
                 return await self._async_read_all(client)
             finally:
                 await self._async_disconnect(client)
@@ -221,8 +230,9 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         """Authenticate, write a single command byte, then read back the result."""
         try:
             async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
-                client = await self._async_connect(self._ble_device())
+                client: BleakClient | None = None
                 try:
+                    client = await self._async_connect(self._ble_device())
                     await self._async_authenticate(client)
                     await client.write_gatt_char(
                         CH_COMMAND, bytes([command]), response=True
@@ -246,8 +256,9 @@ class HansaCoordinator(ActiveBluetoothDataUpdateCoordinator[protocol.FaucetData]
         """
         try:
             async with asyncio.timeout(_POLL_TIMEOUT), self._lock:
-                client = await self._async_connect(self._ble_device())
+                client: BleakClient | None = None
                 try:
+                    client = await self._async_connect(self._ble_device())
                     await self._async_authenticate(client)
                     current = bytes(await client.read_gatt_char(CH_PARAM_A))
                     await client.write_gatt_char(

@@ -19,6 +19,7 @@ BLE_DEVICE = "custom_components.hansa_ble.bluetooth.async_ble_device_from_addres
 CLEAR_HISTORY = (
     "custom_components.hansa_ble.bluetooth.async_clear_advertisement_history"
 )
+CONNECT = "custom_components.hansa_ble.coordinator.establish_connection"
 POLL_TIMEOUT = "custom_components.hansa_ble.coordinator._POLL_TIMEOUT"
 DISCONNECT_TIMEOUT = "custom_components.hansa_ble.coordinator._DISCONNECT_TIMEOUT"
 
@@ -346,3 +347,97 @@ async def test_set_parameter_counts_as_a_successful_read(
 
     assert coordinator.last_poll_successful is True
     assert coordinator.data is not None
+
+
+async def test_a_refused_connection_still_clears_the_history(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A poll that never got a connection must not strand the coordinator.
+
+    Clearing is what lets the next identical advertisement through, and the
+    next advertisement is the only thing that asks for another poll. Skip it
+    once and the faucet stays unavailable until the entry is reloaded, however
+    loudly it goes on advertising.
+    """
+    with (
+        patch(CONNECT, side_effect=BleakError("refused")),
+        patch(CLEAR_HISTORY) as clear,
+        pytest.raises(BleakError),
+    ):
+        await coordinator._async_poll_faucet(service_info)
+
+    clear.assert_called_once_with(hass, ADDRESS)
+    assert not coordinator._lock.locked()
+
+
+async def test_a_poll_runs_again_after_a_refused_connection(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """The next wake-up gets its attempt, rather than never arriving."""
+    with (
+        patch(CONNECT, side_effect=BleakError("refused")),
+        patch(CLEAR_HISTORY),
+        pytest.raises(BleakError),
+    ):
+        await coordinator._async_poll_faucet(service_info)
+
+    with patch(CLEAR_HISTORY):
+        data = await coordinator._async_poll_faucet(service_info)
+
+    assert data.get("total_volume") == 9641
+
+
+async def test_a_refused_connection_on_a_command_clears_the_history(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A button press that cannot connect must not cost the next wake-up."""
+    with (
+        patch(BLE_DEVICE, return_value=service_info.device),
+        patch(CONNECT, side_effect=BleakError("refused")),
+        patch(CLEAR_HISTORY) as clear,
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_send_command(const.CMD_WINK)
+
+    clear.assert_called_once_with(hass, ADDRESS)
+
+
+async def test_a_refused_connection_on_a_write_clears_the_history(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """Same for a setting that could not be written."""
+    with (
+        patch(BLE_DEVICE, return_value=service_info.device),
+        patch(CONNECT, side_effect=BleakError("refused")),
+        patch(CLEAR_HISTORY) as clear,
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_set_parameter("max_run_time", 90)
+
+    clear.assert_called_once_with(hass, ADDRESS)
+
+
+async def test_a_command_out_of_range_clears_the_history(
+    hass: HomeAssistant, coordinator: HansaCoordinator
+) -> None:
+    """Even when there was never a route to try, the history is let go."""
+    with (
+        patch(BLE_DEVICE, return_value=None),
+        patch(CLEAR_HISTORY) as clear,
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_send_command(const.CMD_WINK)
+
+    clear.assert_called_once_with(hass, ADDRESS)
