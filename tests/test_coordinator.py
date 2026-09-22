@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from bleak.exc import BleakError
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
@@ -17,6 +19,14 @@ BLE_DEVICE = "custom_components.hansa_ble.bluetooth.async_ble_device_from_addres
 CLEAR_HISTORY = (
     "custom_components.hansa_ble.bluetooth.async_clear_advertisement_history"
 )
+POLL_TIMEOUT = "custom_components.hansa_ble.coordinator._POLL_TIMEOUT"
+DISCONNECT_TIMEOUT = "custom_components.hansa_ble.coordinator._DISCONNECT_TIMEOUT"
+
+
+async def _never_returns(*args: object, **kwargs: object) -> bytes:
+    """Stand in for a GATT call the faucet never answers."""
+    await asyncio.Event().wait()
+    return b""  # pragma: no cover - unreachable, the wait never ends
 
 
 @pytest.fixture
@@ -206,3 +216,133 @@ async def test_set_parameter_with_wrong_pin(
         pytest.raises(ConfigEntryAuthFailed),
     ):
         await coordinator.async_set_parameter("max_run_time", 90)
+
+
+async def test_poll_gives_up_on_a_read_that_never_answers(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A faucet that falls asleep mid-read must not stall the coordinator.
+
+    Bleak puts no deadline on a read, so without one of our own the poll would
+    hold the lock until Home Assistant restarts - and because Home Assistant
+    only counts a poll that raises as failed, it would do so without a word.
+    """
+    mock_client.read_gatt_char.side_effect = _never_returns
+
+    with (
+        patch(POLL_TIMEOUT, 0.01),
+        patch(CLEAR_HISTORY),
+        pytest.raises(TimeoutError),
+    ):
+        await coordinator._async_poll_faucet(service_info)
+
+    assert not coordinator._lock.locked()
+
+
+async def test_a_second_poll_runs_after_one_timed_out(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """The next wake-up gets a fresh attempt rather than queueing for ever."""
+    original = mock_client.read_gatt_char.side_effect
+    mock_client.read_gatt_char.side_effect = _never_returns
+
+    with patch(POLL_TIMEOUT, 0.01), patch(CLEAR_HISTORY), pytest.raises(TimeoutError):
+        await coordinator._async_poll_faucet(service_info)
+
+    mock_client.read_gatt_char.side_effect = original
+    with patch(CLEAR_HISTORY):
+        data = await coordinator._async_poll_faucet(service_info)
+
+    assert data.get("total_volume") == 9641
+
+
+async def test_disconnect_that_hangs_is_abandoned(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """Hanging up is best effort; the readings are already in hand."""
+    mock_client.disconnect.side_effect = _never_returns
+
+    with patch(DISCONNECT_TIMEOUT, 0.01), patch(CLEAR_HISTORY) as clear:
+        data = await coordinator._async_poll_faucet(service_info)
+
+    assert data.get("total_volume") == 9641
+    clear.assert_called_once_with(hass, ADDRESS)
+    assert not coordinator._lock.locked()
+
+
+async def test_disconnect_that_fails_still_clears_the_history(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A failed hang-up must not cost us the next wake-up as well."""
+    mock_client.disconnect.side_effect = BleakError("already gone")
+
+    with patch(CLEAR_HISTORY) as clear:
+        data = await coordinator._async_poll_faucet(service_info)
+
+    assert data.get("total_volume") == 9641
+    clear.assert_called_once_with(hass, ADDRESS)
+
+
+async def test_command_gives_up_on_a_read_that_never_answers(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A button press that hangs is reported, not left waiting."""
+    mock_client.read_gatt_char.side_effect = _never_returns
+
+    with (
+        patch(BLE_DEVICE, return_value=service_info.device),
+        patch(POLL_TIMEOUT, 0.01),
+        patch(CLEAR_HISTORY),
+        pytest.raises(HomeAssistantError),
+    ):
+        await coordinator.async_send_command(const.CMD_WINK)
+
+    assert not coordinator._lock.locked()
+
+
+async def test_a_command_counts_as_a_successful_read(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """A command reads everything back, so the entities may show it again."""
+    coordinator.last_poll_successful = False
+
+    with patch(BLE_DEVICE, return_value=service_info.device), patch(CLEAR_HISTORY):
+        await coordinator.async_send_command(const.CMD_WINK)
+
+    assert coordinator.last_poll_successful is True
+    assert coordinator.data is not None
+    assert coordinator.data.get("total_volume") == 9641
+
+
+async def test_set_parameter_counts_as_a_successful_read(
+    hass: HomeAssistant,
+    coordinator: HansaCoordinator,
+    mock_client: AsyncMock,
+    service_info,
+) -> None:
+    """Writing a setting reads the block back, which is as good as a poll."""
+    coordinator.last_poll_successful = False
+
+    with patch(BLE_DEVICE, return_value=service_info.device), patch(CLEAR_HISTORY):
+        await coordinator.async_set_parameter("max_run_time", 90)
+
+    assert coordinator.last_poll_successful is True
+    assert coordinator.data is not None

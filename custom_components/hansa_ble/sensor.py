@@ -123,4 +123,4 @@ class HansaSensor(HansaEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Only report a value once a poll has actually produced one."""
-        return super().available and self.coordinator.data is not None
+        return super().available and self._has_readings

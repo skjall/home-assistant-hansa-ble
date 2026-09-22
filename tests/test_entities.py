@@ -134,3 +134,41 @@ async def test_number_writes_its_field(
             blocking=True,
         )
     write.assert_awaited_once_with("run_on_time", 5)
+
+
+async def test_entities_go_unavailable_when_polling_breaks(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Readings that can no longer be refreshed must not be shown as current.
+
+    The faucet keeps advertising while every attempt to read it fails, which
+    leaves Home Assistant's own notion of availability untouched - it only
+    tracks whether packets arrive. Without looking at the poll as well the
+    entities would keep displaying whatever was read hours ago.
+    """
+    coordinator = loaded_entry.runtime_data
+    volume = _entity_id(hass, Platform.SENSOR, "total_volume")
+    assert hass.states.get(volume).state == "9641"
+
+    coordinator.last_poll_successful = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(volume).state == STATE_UNAVAILABLE
+    valve = _entity_id(hass, Platform.BINARY_SENSOR, "valve_open")
+    assert hass.states.get(valve).state == STATE_UNAVAILABLE
+    run_time = _entity_id(hass, Platform.NUMBER, "max_run_time")
+    assert hass.states.get(run_time).state == STATE_UNAVAILABLE
+
+
+async def test_buttons_stay_available_when_polling_breaks(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """A command is still worth trying even when reading the faucet fails."""
+    coordinator = loaded_entry.runtime_data
+    coordinator.last_poll_successful = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    identify = _entity_id(hass, Platform.BUTTON, "identify")
+    assert hass.states.get(identify).state != STATE_UNAVAILABLE

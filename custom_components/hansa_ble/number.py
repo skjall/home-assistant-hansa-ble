@@ -113,7 +113,7 @@ class HansaNumber(HansaEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Only offer the setting once we have read the current value."""
-        return super().available and self.coordinator.data is not None
+        return super().available and self._has_readings
 
     async def async_set_native_value(self, value: float) -> None:
         """Write the new value back to the device."""
