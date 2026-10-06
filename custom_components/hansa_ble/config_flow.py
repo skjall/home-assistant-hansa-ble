@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import hansa_ble_protocol as protocol
-import voluptuous as vol
+import probatio
 from bleak import BleakClient
 from bleak_retry_connector import establish_connection
 from homeassistant.components.bluetooth import (
@@ -136,7 +136,9 @@ class HansaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(candidates)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(candidates)}
+            ),
         )
 
     async def async_step_pin(
@@ -158,7 +160,7 @@ class HansaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pin",
-            data_schema=vol.Schema({vol.Required(CONF_PIN): PIN_SELECTOR}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): PIN_SELECTOR}),
             errors=errors,
             description_placeholders={"name": self._title or self._address},
         )
@@ -189,7 +191,7 @@ class HansaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PIN): PIN_SELECTOR}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): PIN_SELECTOR}),
             errors=errors,
             description_placeholders={"name": self._title or self._address},
         )
@@ -230,12 +232,12 @@ class HansaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ADDRESS, default=entry.data[CONF_ADDRESS]
-                    ): vol.In(candidates),
-                    vol.Required(CONF_PIN): PIN_SELECTOR,
+                    ): probatio.In(candidates),
+                    probatio.Required(CONF_PIN): PIN_SELECTOR,
                 }
             ),
             errors=errors,
@@ -262,15 +264,15 @@ class HansaOptionsFlow(OptionsFlow):
         options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_PIN,
                         default=options.get(
                             CONF_PIN, self.config_entry.data.get(CONF_PIN, "")
                         ),
                     ): PIN_SELECTOR,
-                    vol.Required(
+                    probatio.Required(
                         CONF_INTERVAL,
                         default=options.get(CONF_INTERVAL, DEFAULT_INTERVAL),
                     ): INTERVAL_SELECTOR,
