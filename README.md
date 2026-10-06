@@ -116,9 +116,10 @@ writes, and reads the new state back over the same connection.
 
 ## Requirements
 
-- Home Assistant 2026.5 or newer (that release added
+- Home Assistant 2026.9 or newer. 2026.5 added
   `async_clear_advertisement_history`, without which a sleeping faucet is only
-  ever polled once)
+  ever polled once; 2026.9 replaced voluptuous with Probatio as the validation
+  engine, which the config flow now builds its schemas with
 - A Bluetooth adapter or an ESPHome Bluetooth proxy within range of the faucet.
   Range matters more than it sounds: the faucet sits under a basin, often
   behind metal. A proxy with an external antenna is worth the trouble.
