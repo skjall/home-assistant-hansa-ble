@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.4.1...v1.0.0) (2026-10-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Home Assistant 2026.9.0 or newer is required. Probatio is not installed before that release, so the config flow cannot import it.
+
+### Features
+
+* follow Home Assistant onto Probatio ([239b727](https://github.com/skjall/home-assistant-hansa-ble/commit/239b727b4c7eec63bbacb28f2683fdb4753eeb3e))
+* follow Home Assistant onto Probatio ([5aed11a](https://github.com/skjall/home-assistant-hansa-ble/commit/5aed11a6c11fe2401c8afa39266a190f1b59b592))
+
 ## [0.4.1](https://github.com/skjall/home-assistant-hansa-ble/compare/v0.4.0...v0.4.1) (2026-09-22)
 
 
