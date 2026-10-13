@@ -2,7 +2,7 @@
 # which most systems do not have yet, so this image pins the exact version the
 # integration targets. The full Python image rather than -slim, because some
 # wheels are built from source and need the libc headers for that.
-FROM python:3.14
+FROM python:3.15
 
 COPY requirements-test.txt scripts/ha_test_requirements.py /tmp/setup/
 # Only the manifest, not the source: it is what declares the requirements, and
